@@ -1,33 +1,84 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# === Binaries ===
+# Основная сборка: go build ./cmd/netcontrol  →  ./netcontrol
+/netcontrol
+/netcontrol.exe
+# Сборка из каталога команды: cd cmd/netcontrol && go build
+/cmd/netcontrol/netcontrol
+/cmd/netcontrol/netcontrol.exe
+# Если команда переименована и бинарник собирается в корне
+/server
+/nc
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# === Build output ===
+/bin/
+/build/
+/dist/
+
+# === Go build / test artifacts ===
 *.test
-
-# Code coverage profiles and other test artifacts
 *.out
-coverage.*
-!coverage.go
-*.coverprofile
-profile.cov
+*.prof
+*.trace
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
+# === Go workspace ===
 go.work
 go.work.sum
 
-# env file
-.env
+# === Coverage ===
+coverage.out
+coverage.txt
+coverage.html
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# === Local database (embedded storage) ===
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+/data/
+
+# === Captures ===
+*.pcap
+*.pcapng
+
+# === Logs ===
+*.log
+
+# === Secrets and local config ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+id_ecdsa*
+/config.local.yaml
+/config.local.yml
+
+# === Temporary files ===
+tmp/
+temp/
+
+# === IDEs ===
+.idea/
+.vscode/
+.vs/
+.fleet/
+*.iml
+*.swp
+*.swo
+*~
+
+# === OS files ===
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini

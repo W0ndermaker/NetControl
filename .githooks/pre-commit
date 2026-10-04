@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: не даёт случайно закоммитить бинарные файлы
+# (скомпилированные бинарники, .so, .dll, .exe, .db и т.п.).
+#
+# Включение (один раз в репозитории):
+#   git config core.hooksPath .githooks
+
+set -uo pipefail
+
+binaries=()
+
+while read -r added deleted path; do
+  # git показывает "-" вместо чисел для бинарных файлов
+  if [ "$added" = "-" ] && [ "$deleted" = "-" ]; then
+    binaries+=("$path")
+  fi
+done < <(git diff --cached --numstat --diff-filter=ACMR)
+
+if [ "${#binaries[@]}" -gt 0 ]; then
+  echo "Коммит отменён: в индексе есть бинарные файлы:"
+  printf '  - %s\n' "${binaries[@]}"
+  echo
+  echo "Что сделать:"
+  echo "  1. добавить путь в .gitignore, затем:"
+  echo "     git rm --cached -- <файл>"
+  echo "  2. или принудительно добавить:"
+  echo "     git commit -n"
+  exit 1
+fi
+
+exit 0
