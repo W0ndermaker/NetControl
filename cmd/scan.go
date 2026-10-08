@@ -4,8 +4,7 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"netcontrol/internal/scanner"
 
 	"github.com/spf13/cobra"
 )
@@ -15,10 +14,9 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scans a network",
 	Long:  `scans a network`,
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("scan called")
-		fmt.Printf("Checking: %s\n", os.Args[2])
+		scanner.NetScan()
 	},
 }
 
