@@ -4,6 +4,7 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"netcontrol/internal/scanner"
 
 	"github.com/spf13/cobra"
@@ -14,9 +15,17 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "scans a network",
 	Long:  `scans a network`,
-	Args:  cobra.NoArgs,
+	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		scanner.NetScan()
+		if len(args) == 0 {
+			if err := scanner.ScanNetworkInterfaces(); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			if err := scanner.ScanNetwork(args[0]); err != nil {
+				fmt.Println(err)
+			}
+		}
 	},
 }
 

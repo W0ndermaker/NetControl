@@ -6,11 +6,13 @@ import (
 )
 
 type NetworkAddress struct {
-	IP   net.IP
-	Mask int
+	IP        net.IP
+	Mask      net.IPMask
+	NetworkIP net.IP
 }
 
-func getIPv4Addrs(iface net.Interface) ([]NetworkAddress, error) {
+// Сканируем сетевой интерфейс для получения данных сети
+func getInterfaceInfo(iface net.Interface) ([]NetworkAddress, error) {
 
 	addrs, err := iface.Addrs()
 	if err != nil {
@@ -30,18 +32,26 @@ func getIPv4Addrs(iface net.Interface) ([]NetworkAddress, error) {
 			continue
 		}
 
-		ones, _ := network.Mask.Size()
+		mask := network.Mask
+		_, bits := mask.Size()
+
+		if bits != 32 {
+			continue
+		}
 
 		netAddrs = append(netAddrs, NetworkAddress{
-			network.IP,
-			ones,
+			IP:   network.IP,
+			Mask: network.Mask,
+			// Накидывается маска сети на локальный IP-адрес для вычисления IP-адреса сети
+			NetworkIP: network.IP.Mask(mask),
 		})
 	}
 
 	return netAddrs, nil
 }
 
-func NetScan() error {
+// Сканируем все доступные сетевые интерфейсы для текущего устройства
+func ScanNetworkInterfaces() error {
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		return fmt.Errorf("Ошибка при получении сетевых интерфейсов: %w", err)
@@ -57,7 +67,7 @@ func NetScan() error {
 			continue
 		}
 
-		ipv4Addrs, err := getIPv4Addrs(iface)
+		ipv4Addrs, err := getInterfaceInfo(iface)
 		if err != nil {
 			return err
 		}
@@ -66,18 +76,7 @@ func NetScan() error {
 			continue
 		}
 
-		//fmt.Printf("%v.\n\t", iface.Index)
-		//fmt.Printf("Максимальный размер сетевого пакета: %v\n\t", iface.MTU)
-		fmt.Printf("\n\tИмя сетевого интерфейса: %v\n\t", iface.Name)
-		fmt.Printf("MAC-адрес: %v\n\t", iface.HardwareAddr)
-		fmt.Printf("Флаги сетевого интерфейса: %v\n", iface.Flags)
-
-		fmt.Printf("\tIPv4: \n")
-		for _, ipv4Addr := range ipv4Addrs {
-			fmt.Printf("\t\t%v/%v\n", ipv4Addr.IP, ipv4Addr.Mask)
-		}
-		fmt.Println()
-
+		showInterfaces(iface, ipv4Addrs)
 	}
 
 	return nil
