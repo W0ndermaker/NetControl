@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const IPPORTION = 5
+const IP_PORTION = 5
 
 func showInterfaces(iface net.Interface, ipv4Addrs []NetworkAddress) {
 	//fmt.Printf("%v.\n\t", iface.Index)
@@ -42,6 +42,10 @@ func showIPRange(networkIP net.IP, broadcast net.IP) error {
 	networkNumber := ipToUint32(networkIP)
 	broadcastNumber := ipToUint32(broadcast)
 
+	if broadcastNumber-networkNumber < 2 {
+		return nil
+	}
+	
 	firstHostIP := uint32ToIp(networkNumber + 1)
 	lastHostIP := uint32ToIp(broadcastNumber - 1)
 
@@ -57,7 +61,7 @@ func showIPRange(networkIP net.IP, broadcast net.IP) error {
 		fmt.Println("\t", uint32ToIp(i))
 		count++
 
-		if count == IPPORTION && i < broadcastNumber-1 {
+		if count == IP_PORTION && i < broadcastNumber-1 {
 			con, err := getCommandContinue(reader)
 			if err != nil {
 				return err

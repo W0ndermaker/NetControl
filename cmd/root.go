@@ -15,7 +15,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("core command is callec")
+		fmt.Println("core command is called")
 	},
 }
 

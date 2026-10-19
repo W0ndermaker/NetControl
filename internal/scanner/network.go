@@ -3,9 +3,10 @@ package scanner
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net"
 )
+
+const maxAddresses uint64 = 65536
 
 func ScanNetwork(RawNetworkIP string) error {
 
@@ -18,7 +19,10 @@ func ScanNetwork(RawNetworkIP string) error {
 }
 
 func generateIPRange(ipNet *net.IPNet) error {
-	ipCount := networkSize(ipNet)
+	ipCount, err := networkSize(ipNet)
+	if err != nil {
+		return err
+	}
 	fmt.Println("Количество IP адресов в сети: ", ipCount)
 
 	networkIP := ipNet.IP.To4()
@@ -26,7 +30,7 @@ func generateIPRange(ipNet *net.IPNet) error {
 		return errors.New("Нужен IPv4")
 	}
 	mask := ipNet.Mask
-	fmt.Println("Маска: ", net.IP(mask))
+	fmt.Println("Маска: ", mask)
 
 	broadcast := make(net.IP, 4)
 
@@ -34,14 +38,27 @@ func generateIPRange(ipNet *net.IPNet) error {
 		broadcast[i] = networkIP[i] | ^mask[i]
 	}
 
-	err := showIPRange(networkIP, broadcast)
+	err = showIPRange(networkIP, broadcast)
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }
 
-func networkSize(ipNet *net.IPNet) int {
+func networkSize(ipNet *net.IPNet) (uint64, error) {
 	ones, bits := ipNet.Mask.Size()
-	return int(math.Pow(2, float64(bits-ones)))
+
+	if bits != 32 {
+		return 0, fmt.Errorf("Поддерживается только IPv4!")
+	}
+
+	totalAddrs := uint64(1) << uint(32-ones)
+
+	if totalAddrs > maxAddresses {
+		return 0, fmt.Errorf("Сеть слишком большая %d адресов, максимум %d",
+			totalAddrs,
+			maxAddresses)
+	}
+
+	return totalAddrs, nil
 }
