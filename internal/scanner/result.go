@@ -28,6 +28,7 @@ func showInterfaces(iface net.Interface, ipv4Addrs []NetworkAddress) {
 			Mask: ipv4Addr.Mask,
 		}
 
+		fmt.Printf("\t\tIndex: %v\n", i)
 		fmt.Printf("\t\tIP: %v\n", ipv4Addr.IP)
 		fmt.Printf("\t\tМаска: %v\n", net.IP(ipv4Addr.Mask).To4())
 		fmt.Printf("\t\tАдрес сети: %v\n", ipNet.String())
@@ -39,11 +40,11 @@ func showIPRange(networkIP net.IP, broadcast net.IP) error {
 	fmt.Printf("Адрес сети: %v\n", networkIP)
 	fmt.Printf("Broadcast: %v\n\n", broadcast)
 
-	networkNumber := ipToUint32(networkIP)
-	broadcastNumber := ipToUint32(broadcast)
+	networkNumber := IPToUint32(networkIP)
+	broadcastNumber := IPToUint32(broadcast)
 
-	firstHostIP := uint32ToIp(networkNumber + 1)
-	lastHostIP := uint32ToIp(broadcastNumber - 1)
+	firstHostIP := uint32ToIP(networkNumber + 1)
+	lastHostIP := uint32ToIP(broadcastNumber - 1)
 
 	fmt.Println("Первый адрес хоста:", firstHostIP)
 	fmt.Println("Последний адрес хоста:", lastHostIP)
@@ -54,7 +55,7 @@ func showIPRange(networkIP net.IP, broadcast net.IP) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for i := networkNumber + 1; i <= broadcastNumber-1; i++ {
-		fmt.Println("\t", uint32ToIp(i))
+		fmt.Println("\t", uint32ToIP(i))
 		count++
 
 		if count == IPPORTION && i < broadcastNumber-1 {
