@@ -1,11 +1,8 @@
 package scanner
 
 import (
-	"bufio"
 	"fmt"
 	"net"
-	"os"
-	"strings"
 )
 
 const IPPORTION = 5
@@ -36,59 +33,58 @@ func showInterfaces(iface net.Interface, ipv4Addrs []NetworkAddress) {
 
 }
 
-func showIPRange(networkIP net.IP, broadcast net.IP) error {
-	fmt.Printf("Адрес сети: %v\n", networkIP)
-	fmt.Printf("Broadcast: %v\n\n", broadcast)
+func showIPinfo(start, end uint32) {
 
-	networkNumber := IPToUint32(networkIP)
-	broadcastNumber := IPToUint32(broadcast)
+	fmt.Println("Всего адресов в сети:", uint64(end)-uint64(start)+1)
 
-	firstHostIP := uint32ToIP(networkNumber + 1)
-	lastHostIP := uint32ToIP(broadcastNumber - 1)
+	fmt.Printf("Адрес сети: %v\n", uint32ToIP(start))
+	fmt.Printf("Broadcast: %v\n\n", uint32ToIP(end))
+
+	firstHostIP := uint32ToIP(start + 1)
+	lastHostIP := uint32ToIP(end - 1)
 
 	fmt.Println("Первый адрес хоста:", firstHostIP)
 	fmt.Println("Последний адрес хоста:", lastHostIP)
 
-	count := 0
-	fmt.Printf("\nIP-адреса:\n")
+	// count := 0
+	// fmt.Printf("\nIP-адреса:\n")
 
-	reader := bufio.NewReader(os.Stdin)
+	// reader := bufio.NewReader(os.Stdin)
 
-	for i := networkNumber + 1; i <= broadcastNumber-1; i++ {
-		fmt.Println("\t", uint32ToIP(i))
-		count++
+	// for i := networkNumber + 1; i <= broadcastNumber-1; i++ {
+	// 	fmt.Println("\t", uint32ToIP(i))
+	// 	count++
 
-		if count == IPPORTION && i < broadcastNumber-1 {
-			con, err := getCommandContinue(reader)
-			if err != nil {
-				return err
-			}
+	// 	if count == IPPORTION && i < broadcastNumber-1 {
+	// 		con, err := getCommandContinue(reader)
+	// 		if err != nil {
+	// 			return err
+	// 		}
 
-			if !con {
-				break
-			}
+	// 		if !con {
+	// 			break
+	// 		}
 
-			count = 0
-		}
-	}
-	return nil
+	// 		count = 0
+	// 	}
+	// }
 }
 
-func getCommandContinue(r *bufio.Reader) (bool, error) {
+// func getCommandContinue(r *bufio.Reader) (bool, error) {
 
-	fmt.Println("Нажмите Enter для продолжения или q для выхода")
+// 	fmt.Println("Нажмите Enter для продолжения или q для выхода")
 
-	input, err := r.ReadString('\n')
-	if err != nil {
-		return false, err
-	}
+// 	input, err := r.ReadString('\n')
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	input = strings.TrimSpace(input)
+// 	input = strings.TrimSpace(input)
 
-	if input == "q" {
-		fmt.Println("Выход")
-		return false, nil
-	}
+// 	if input == "q" {
+// 		fmt.Println("Выход")
+// 		return false, nil
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }

@@ -14,6 +14,10 @@ func ipv4Network(ip net.IP, mask net.IPMask) (start, end uint32, err error) {
 	}
 
 	ones, bits := mask.Size()
+	if bits == 0 {
+		return 0, 0, errors.New("маска не непрерывная или неверной длины")
+	}
+
 	if bits == 128 {
 		ones -= 96
 	}
@@ -25,6 +29,7 @@ func ipv4Network(ip net.IP, mask net.IPMask) (start, end uint32, err error) {
 	netmask := ^uint32(0) << (32 - ones)
 
 	start = addr & netmask
+	// broadcast
 	end = addr | ^netmask
 	return start, end, nil
 }
@@ -65,17 +70,33 @@ func ScanNetwork(interfaceName string) error {
 		return fmt.Errorf("у интерфейса %s нет IPv4-адресов", iface.Name)
 	}
 
-	a, err := selectAddress(addrs)
+	address, err := selectAddress(addrs)
 	if err != nil {
 		return err
 	}
 
-	start, end, err := ipv4Network(a.IP, a.Mask)
+	start, end, err := ipv4Network(address.IP, address.Mask)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Всего адресов в сети:", uint64(end)-uint64(start)+1)
-	return showIPRange(uint32ToIP(start), uint32ToIP(end))
+	fmt.Println("IP адрес: ", address.IP)
+
+	showIPinfo(start, end)
+
+	ARPScan(start, end)
+	table, err := ReadARPTable()
+	if err != nil {
+		fmt.Println("Не удалось прочитать ARP-таблицу:", err)
+		return err
+	}
+
+	fmt.Println("\nКоличество занятых IP-адресов: ", len(table))
+	fmt.Println("IP\t\t\tMAC")
+	for ip, mac := range table {
+		fmt.Printf("%s\t\t%s\n", ip, mac)
+	}
+
+	return nil
 
 }
