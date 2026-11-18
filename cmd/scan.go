@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"netcontrol/internal/scanner"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -20,10 +21,12 @@ var scanCmd = &cobra.Command{
 		if len(args) == 0 {
 			if err := scanner.ScanNetworkInterfaces(); err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		} else {
 			if err := scanner.ScanNetwork(args[0]); err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
 	},

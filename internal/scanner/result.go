@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-const IPPORTION = 5
+const IP_PORTION = 5
 
 func showInterfaces(iface net.Interface, ipv4Addrs []NetworkAddress) {
 	//fmt.Printf("%v.\n\t", iface.Index)
@@ -33,15 +33,19 @@ func showInterfaces(iface net.Interface, ipv4Addrs []NetworkAddress) {
 
 }
 
-func showIPinfo(start, end uint32) {
+func showIPRange(networkIP net.IP, broadcast net.IP) error {
+	fmt.Printf("Адрес сети: %v\n", networkIP)
+	fmt.Printf("Broadcast: %v\n\n", broadcast)
 
-	fmt.Println("Всего адресов в сети:", uint64(end)-uint64(start)+1)
+	networkNumber := ipToUint32(networkIP)
+	broadcastNumber := ipToUint32(broadcast)
 
-	fmt.Printf("Адрес сети: %v\n", uint32ToIP(start))
-	fmt.Printf("Broadcast: %v\n\n", uint32ToIP(end))
+	if broadcastNumber-networkNumber < 2 {
+		return nil
+	}
 
-	firstHostIP := uint32ToIP(start + 1)
-	lastHostIP := uint32ToIP(end - 1)
+	firstHostIP := uint32ToIp(networkNumber + 1)
+	lastHostIP := uint32ToIp(broadcastNumber - 1)
 
 	fmt.Println("Первый адрес хоста:", firstHostIP)
 	fmt.Println("Последний адрес хоста:", lastHostIP)
@@ -55,11 +59,11 @@ func showIPinfo(start, end uint32) {
 	// 	fmt.Println("\t", uint32ToIP(i))
 	// 	count++
 
-	// 	if count == IPPORTION && i < broadcastNumber-1 {
-	// 		con, err := getCommandContinue(reader)
-	// 		if err != nil {
-	// 			return err
-	// 		}
+		if count == IP_PORTION && i < broadcastNumber-1 {
+			con, err := getCommandContinue(reader)
+			if err != nil {
+				return err
+			}
 
 	// 		if !con {
 	// 			break

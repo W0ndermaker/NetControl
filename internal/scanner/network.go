@@ -7,96 +7,59 @@ import (
 	"net"
 )
 
-func ipv4Network(ip net.IP, mask net.IPMask) (start, end uint32, err error) {
-	ip4 := ip.To4()
-	if ip4 == nil {
-		return 0, 0, errors.New("нужен IPv4-адрес")
-	}
+const maxAddresses uint64 = 65536
 
-	ones, bits := mask.Size()
-	if bits == 0 {
-		return 0, 0, errors.New("маска не непрерывная или неверной длины")
-	}
+func ScanNetwork(RawNetworkIP string) error {
 
-	if bits == 128 {
-		ones -= 96
-	}
-	if ones < 0 || ones > 32 {
-		return 0, 0, errors.New("некорректная маска")
-	}
-
-	addr := binary.BigEndian.Uint32(ip4)
-	netmask := ^uint32(0) << (32 - ones)
-
-	start = addr & netmask
-	// broadcast
-	end = addr | ^netmask
-	return start, end, nil
-}
-
-func selectAddress(addrs []NetworkAddress) (NetworkAddress, error) {
-	if len(addrs) == 1 {
-		return addrs[0], nil
-	}
-
-	fmt.Println("Выберите, какой IP-адрес сканировать:")
-	for i, addr := range addrs {
-		fmt.Printf("%d --- %v\n", i+1, addr)
-	}
-
-	var choice int
-	if _, err := fmt.Scan(&choice); err != nil {
-		return NetworkAddress{}, fmt.Errorf("некорректный ввод: %w", err)
-	}
-	if choice < 1 || choice > len(addrs) {
-		return NetworkAddress{}, fmt.Errorf("номер должен быть от 1 до %d", len(addrs))
-	}
-	return addrs[choice-1], nil
-}
-
-func ScanNetwork(interfaceName string) error {
-
-	iface, err := net.InterfaceByName(interfaceName)
+	_, ipNet, err := net.ParseCIDR(RawNetworkIP)
 	if err != nil {
 		return fmt.Errorf("интерфейс %q: %w", interfaceName, err)
 	}
 
-	addrs, err := getInterfaceInfo(*iface)
-	if err != nil {
-		return fmt.Errorf("Ошибка адреса: %w", err)
-	}
+	return generateIPRange(ipNet)
+}
 
-	if len(addrs) == 0 {
-		return fmt.Errorf("у интерфейса %s нет IPv4-адресов", iface.Name)
-	}
-
-	address, err := selectAddress(addrs)
+func generateIPRange(ipNet *net.IPNet) error {
+	ipCount, err := networkSize(ipNet)
 	if err != nil {
 		return err
 	}
+	fmt.Println("Количество IP адресов в сети: ", ipCount)
 
-	start, end, err := ipv4Network(address.IP, address.Mask)
-	if err != nil {
-		return err
+	networkIP := ipNet.IP.To4()
+	if networkIP == nil {
+		return errors.New("Нужен IPv4")
+	}
+	mask := ipNet.Mask
+	fmt.Println("Маска: ", mask)
+
+	broadcast := make(net.IP, 4)
+
+	for i := range len(networkIP) {
+		broadcast[i] = networkIP[i] | ^mask[i]
 	}
 
-	fmt.Println("IP адрес: ", address.IP)
-
-	showIPinfo(start, end)
-
-	ARPScan(start, end)
-	table, err := ReadARPTable()
+	err = showIPRange(networkIP, broadcast)
 	if err != nil {
-		fmt.Println("Не удалось прочитать ARP-таблицу:", err)
 		return err
-	}
-
-	fmt.Println("\nКоличество занятых IP-адресов: ", len(table))
-	fmt.Println("IP\t\t\tMAC")
-	for ip, mac := range table {
-		fmt.Printf("%s\t\t%s\n", ip, mac)
 	}
 
 	return nil
 
+func networkSize(ipNet *net.IPNet) (uint64, error) {
+	ones, bits := ipNet.Mask.Size()
+
+	if bits != 32 {
+		return 0, fmt.Errorf("Поддерживается только IPv4!")
+	}
+
+	totalAddrs := uint64(1) << uint(32-ones)
+
+	if totalAddrs > maxAddresses {
+		return 0, fmt.Errorf("Сеть слишком большая %d адресов, максимум %d",
+			totalAddrs,
+			maxAddresses)
+	}
+
+	return totalAddrs, nil
 }
